@@ -8,3 +8,4 @@ env
 /*.spec
 /*.mp4
 /test.db
+/gui.spec
