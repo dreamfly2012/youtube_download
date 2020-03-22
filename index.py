@@ -1,6 +1,6 @@
 from pytube import YouTube
 
-yt = YouTube("https://www.youtube.com/watch?v=INwWJicYwds",proxies={"https":"http://127.0.0.1:1080"})
+yt = YouTube("https://www.youtube.com/watch?v=10uVS5pmm-g",proxies={"https":"http://127.0.0.1:1080"})
 
 info= yt.streams
 

@@ -7,3 +7,4 @@ env
 /dist
 /*.spec
 /*.mp4
+/test.db
