@@ -83,7 +83,8 @@ class Application(tk.Frame):
             t2.start()
         else:
             tk.messagebox.showerror('错误','url不能为空')
-            exit   
+            return
+              
     def dic_get(self, dic, serach):
         for key in dic:
             if dic[key] == serach:
@@ -101,6 +102,8 @@ class Application(tk.Frame):
     def download(self):
         if self.resolve == False:
             tk.messagebox.showwarning('warning','请等待url解析')
+            return 
+
         else:    
             t1 = threading.Thread(target=self.process_download)
             t1.setDaemon(True)
@@ -112,7 +115,11 @@ class Application(tk.Frame):
         resolution = self.resolution.get()
         self.index = self.dic_get(self.dic, resolution)
         info = db.getdata()
-        self.streams[self.index].download(info[1])
+        try:
+            self.streams[self.index].download(info[1])
+        except Exception as e:
+            tk.messagebox.showerror('错误', e)
+            return     
         self.resolve = False
         tk.messagebox.showinfo('success','下载完成') 
 
@@ -139,16 +146,23 @@ class Application(tk.Frame):
         print(link)
         print(proxy)
 
+        if not link:
+            tk.messagebox.showerror("警告", "链接不能为空")
+            return
+
+        if not proxy:
+            tk.messagebox.showerror('错误', '代理不能为空')
+            return    
         
         try:
             yt = YouTube(link,on_progress_callback=self.progress_function, proxies={"https":proxy})
             self.streams= yt.streams
             for i in range(len(self.streams)):
-                if self.streams[i].type == 'video':
-                    if(self.dic_exist(self.dic, self.streams[i].resolution)==False):
+                if self.streams[i].mime_type == 'video/mp4':
+                    if self.streams[i].resolution!=None:
                         self.dic[i] = self.streams[i].resolution
 
-            
+            self.resolution.set("请选择")
             self.optionmenu_resolution = tk.OptionMenu(self,self.resolution,*self.dic.values())
             self.optionmenu_resolution.grid(row=4,column=1,columnspan=2,pady=10)
             self.resolve = True
@@ -210,6 +224,7 @@ class Setting(tk.Toplevel):
         path = self.entry_path.get()
         if(proxy=='' or path == ''):
             tk.messagebox.showwarning('警告','代理和保存路径不能为空')
+            return
         
         db.save(proxy=proxy,path=path)
         self.destroy()
@@ -226,10 +241,20 @@ class DB():
     def getdata(self):
         result = self.cursor.execute("SELECT value FROM SETTING where name='proxy'")
         info = self.cursor.fetchone()
-        proxy = info[0]
+        try:
+            proxy = info[0]
+        except:
+            tk.messagebox.showerror('没有设置代理')
+            return
+
         result = self.cursor.execute("SELECT value FROM SETTING where name='path'")
         info = self.cursor.fetchone()
-        path = info[0]
+        try:
+            path = info[0]
+        except:
+            tk.messagebox.showerror('没有设置保存路径')
+            return
+
         return (proxy,path)
 
     def save(self,proxy='',path=''):
@@ -282,14 +307,10 @@ if __name__ == "__main__":
     db = DB()
 
     position = 0
-  
-    #root.title("youtube下载助手")
 
     root.geometry('800x600')
 
     app = Application(master=root)
-
-    
 
     app.master.title("youtube下载助手")
 
@@ -304,4 +325,3 @@ if __name__ == "__main__":
     MenuBar.add_cascade(label='关于',command = about)
 
     app.mainloop()
- 
